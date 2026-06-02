@@ -63,22 +63,8 @@ for i in {1..30}; do
         CURRENT_CPU="0.0"
     fi
 
-    # 3) 고감도 이동 평균(Moving Average) 필터 적용
-    # 공식: 최종 CPU = (이전 CPU * 0.85) + (현재 CPU * 0.15)
-    # 튀는 톱니바퀴형 데이터를 묵직하고 부드러운 언덕 모양의 곡선으로 보정합니다.
-    PREV_CPU="0.0"
-    if [ -f "$LOG_FILE" ] && [ -s "$LOG_FILE" ]; then
-        PREV_CPU=$(tail -n 1 "$LOG_FILE" | grep -o 'CPU:[0-9.]\+' | cut -d':' -f2)
-        if [ -z "$PREV_CPU" ]; then PREV_CPU="0.0"; fi
-    fi
-
-    APP_CPU=$(awk -v prev="$PREV_CPU" -v curr="$CURRENT_CPU" '
-    BEGIN {
-        if (prev == "0.0") { final_cpu = curr; }
-        else { final_cpu = (prev * 0.3) + (curr * 0.7); }
-        printf "%.1f", final_cpu
-    }')
-
+    APP_CPU="$CURRENT_CPU"
+    
     # 4) 디스크 사용량 점검
     APP_DIR=$(dirname "$LOG_FILE") 
     APP_DISK_USED=$(df -P "$APP_DIR" | tail -1 | awk '{print $5}' | tr -d '%')
